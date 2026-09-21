@@ -1,0 +1,6 @@
+Drop her photos in this folder, then set in index.html:
+
+    photos: {
+      surprise: "photos/us.jpg",
+      finale:   "photos/her.jpg"
+    }
