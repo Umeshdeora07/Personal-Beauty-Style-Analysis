@@ -28,8 +28,8 @@ const CONFIG = {
   music: "",              // "music/our-song.mp3" — or "" for the built-in loop
   musicVolume: 0.35,
   photos: {
-    surprise: "",         // "photos/us.jpg"
-    finale:   ""          // "photos/her.jpg"
+    surprise: PHOTOS.her1,  // Surprise #4  (or a path: "photos/her1.jpg")
+    finale:   PHOTOS.her2   // hidden final surprise
   },
   surprises: [ ... ],     // the 5 gift-box cards: tag, icon, title, body
   finalHidden: { ... },   // the hidden one-more-surprise card
@@ -37,8 +37,13 @@ const CONFIG = {
 };
 ```
 
-- **Photos** — drop them in `photos/` and point `CONFIG.photos` at them. Until
-  you do, a pretty dashed placeholder shows in their place.
+- **Photos** — two photos are already embedded (as base64, at the very top of
+  `<body>`) so `index.html` stays a single portable file you can send as-is.
+  They appear as Surprise #4 and in the hidden final surprise. To change one,
+  either replace its base64 string, or just set `CONFIG.photos.surprise` /
+  `.finale` to a file path like `"photos/her1.jpg"`. Optimized copies live in
+  `photos/`, and the full-resolution originals are kept in the repo root.
+  Photos render uncropped at their natural shape in a soft polaroid frame.
 - **Music** — drop a track in `music/` and set `CONFIG.music`. If it's empty
   (or the file is missing) the page generates its own soft romantic piano loop
   in-browser, so there is always background music. The 🔈 button in the corner
@@ -68,7 +73,9 @@ const CONFIG = {
 Driven end to end with Playwright on desktop (1280×820) and mobile (390×844,
 touch): every stage advances, the KARELA button stayed inside the viewport
 across every dodge, the ME button stayed clickable, all 5 surprises render,
-and the finale plus hidden surprise reveal correctly. No console errors.
+and the finale plus hidden surprise reveal correctly. Both embedded photos
+decode and display at their true 2:3 ratio with no placeholders left over.
+No console errors.
 
 ## Accessibility & polish
 
