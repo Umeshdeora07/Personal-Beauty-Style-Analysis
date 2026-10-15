@@ -86,7 +86,7 @@ No console errors.
 
 ---
 
-# 💌 Taniya ji ka letter — `taniya-letter.html`
+# 💌 Taniya ji ka letter — `taniya.html`
 
 A separate, single-file digital letter-card (Hinglish), made to be opened on a
 phone. Ten screens, one at a time: a cute "Ruko! ✋" start → a sealed envelope
@@ -95,9 +95,16 @@ six flip-open notes → dil ki baat → three shayari cards → four gift boxes
 (including a Tension Exchange Coupon) → the SORRY surprise with the
 Haan / Nahi game → the closing letter, which folds back into the envelope.
 
+## Share link
+
+With GitHub Pages turned on for this branch (Settings → Pages → Deploy from a
+branch → `claude/optimistic-fermat-nnzqtf`, folder `/ (root)`), the letter is at:
+
+https://umeshdeora07.github.io/Personal-Beauty-Style-Analysis/taniya.html
+
 ## Fill in your details
 
-Open `taniya-letter.html`, find the `CONFIG` block at the top of the
+Open `taniya.html`, find the `CONFIG` block at the top of the
 `<script>` near the bottom, and replace the `____` values:
 
 ```js
