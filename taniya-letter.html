@@ -72,10 +72,7 @@ button{font-family:inherit}
 .icon-btn:active{transform:scale(.9)}
 .icon-btn svg{width:20px;height:20px}
 .icon-btn[disabled]{opacity:0;pointer-events:none}
-.music span{font-size:19px;line-height:1;opacity:.55;filter:grayscale(.4);transition:.3s}
-.music.on{background:var(--rg-grad);border-color:transparent;box-shadow:0 0 0 5px rgba(215,154,150,.22),0 6px 16px -8px rgba(122,42,62,.4)}
-.music.on span{opacity:1;filter:none;animation:noteBob 1.4s ease-in-out infinite}
-@keyframes noteBob{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-3px) rotate(6deg)}}
+.topbar-spacer{width:44px;height:44px}
 .dots{display:flex;gap:6px;align-items:center}
 .dot{width:7px;height:7px;border-radius:99px;background:rgba(183,110,121,.25);transition:all .45s var(--ease)}
 .dot.done{background:rgba(183,110,121,.62)}
@@ -399,7 +396,7 @@ p{margin:0}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
   </button>
   <div class="dots" id="dots" aria-hidden="true"></div>
-  <button class="icon-btn music" id="musicBtn" aria-label="Music chalao" aria-pressed="false"><span>🎵</span></button>
+  <span class="topbar-spacer" aria-hidden="true"></span>
 </header>
 
 <main class="app">
@@ -613,7 +610,14 @@ const CONFIG = {
   meetTime: "____",   // time you met on 14 July, e.g. "shaam 5 baje"
   outfit:   "____",   // what she wore, e.g. "blue kurti"
   loves:    "____",   // things she loves, comma separated, e.g. "red roses, momos, pink"
-  whatsapp: "____"    // your WhatsApp number with country code, e.g. "91XXXXXXXXXX"
+  whatsapp: "____",   // your WhatsApp number with country code, e.g. "91XXXXXXXXXX"
+
+  // 🎵 Background song: put the mp3 next to this page (e.g. in the "music"
+  // folder). The first file below that exists is used. It starts on her first
+  // tap, because phones don't allow sound before that. If no file is found,
+  // the built-in soft music-box tune plays instead.
+  song: ["music/alfaaz.mp3", "music/Alfaaz.mp3", "alfaaz.mp3", "Alfaaz.mp3"],
+  songVolume: 0.8     // 0 … 1
 };
 
 /* ---------- the content ---------- */
@@ -909,7 +913,8 @@ const FX = (() => {
 
 /* ---------- soft music box (Web Audio, no files) ---------- */
 const Music = (() => {
-  let ctx = null, master, bus, timer = 0, idx = 0, loopStart = 0, offT = 0, on = false;
+  let ctx = null, master, bus, timer = 0, idx = 0, loopStart = 0, offT = 0, on = false, listener = null;
+  const quiet = p => { if (p && p.catch) p.catch(() => {}); };
   const BEAT = 60 / 96;
   // 16 bars of 3/4 · [midi, beats]
   const MEL = [
@@ -942,6 +947,7 @@ const Music = (() => {
     verb.buffer = buf; wet.gain.value = .32;
     bus.connect(master); bus.connect(verb); verb.connect(wet); wet.connect(master);
     master.connect(ctx.destination);
+    ctx.onstatechange = () => { if (listener) listener(ctx.state); };
     return true;
   }
   function tone(m, t, v, d) {
@@ -973,7 +979,7 @@ const Music = (() => {
   function start() {
     if (!ctx && !init()) return false;
     clearTimeout(offT);
-    if (ctx.state !== 'running') ctx.resume();
+    if (ctx.state !== 'running') quiet(ctx.resume());
     if (!timer) { idx = 0; loopStart = ctx.currentTime + .15; timer = setInterval(tick, 60); tick(); }
     ramp(.55, .8);
     on = true;
@@ -984,14 +990,118 @@ const Music = (() => {
     if (!ctx) return;
     ramp(0, .5);
     clearInterval(timer); timer = 0;
-    offT = setTimeout(() => ctx.suspend(), 700);
+    clearTimeout(offT);
+    offT = setTimeout(() => { if (!on) quiet(ctx.suspend()); }, 700);
   }
+  // wake the audio engine inside a tap, so a later fallback can still be heard
+  function unlock() { if (!ctx && !init()) return; if (ctx.state !== 'running') quiet(ctx.resume()); }
+  function sleep() { if (ctx && !on && ctx.state === 'running') quiet(ctx.suspend()); }
+  return {
+    start, stop, unlock, sleep,
+    running: () => !!ctx && on && ctx.state === 'running',
+    onChange(fn) { listener = fn; }
+  };
+})();
+
+/* ---------- background music: the song if it's there, else the music box ---------- */
+// Plays by itself and keeps playing. Phones only allow sound after the first
+// tap, so it starts on her very first touch (the "Haan" button on screen 1).
+const Sound = (() => {
+  const paths = (Array.isArray(CONFIG.song) ? CONFIG.song : [CONFIG.song]).filter(p => typeof p === 'string' && p.trim());
+  const VOL = Math.min(1, Math.max(0, Number(CONFIG.songVolume) || .8));
+  let song = null;
+  let songState = paths.length ? 'loading' : 'none';      // loading | ok | failed | none
+  let mode = '';                                           // 'song' | 'box'
+  let playing = false, hiddenPaused = false, activated = false, fadeT = 0;
+
+  const setPlaying = on => { playing = on; document.documentElement.dataset.music = on ? mode : 'off'; };
+  function fadeTo(target, ms) {
+    clearInterval(fadeT);
+    const set = v => { try { song.volume = Math.min(1, Math.max(0, v)); } catch (e) {} };
+    if (!ms) { set(target); return; }
+    const from = song.volume, steps = Math.max(1, Math.round(ms / 50));
+    let i = 0;
+    fadeT = setInterval(() => { set(from + (target - from) * (++i / steps)); if (i >= steps) clearInterval(fadeT); }, 50);
+  }
+
+  if (paths.length) {
+    song = document.createElement('audio');
+    song.loop = true;
+    song.preload = 'auto';
+    song.setAttribute('playsinline', '');
+    paths.forEach(p => {
+      const s = document.createElement('source');
+      s.src = p;
+      s.addEventListener('error', () => { if (s === song.lastElementChild) fail(); });   // none of the files exist
+      song.appendChild(s);
+    });
+    song.addEventListener('error', fail);                                               // found, but can't be played
+    song.addEventListener('canplay', () => { if (songState === 'loading') songState = 'ok'; });
+    song.addEventListener('playing', () => {
+      if (mode !== 'song') return;
+      if (document.hidden) { song.pause(); return; }
+      setPlaying(true);
+    });
+    song.addEventListener('pause', () => { if (mode === 'song') setPlaying(false); });
+    document.body.appendChild(song);
+  }
+
+  function fail() {
+    if (songState === 'failed') return;
+    songState = 'failed';
+    if (mode === 'song') { clearInterval(fadeT); setPlaying(false); mode = ''; }
+    if (activated && !document.hidden) startBox();
+  }
+  function startBox() {
+    if (song && !song.paused) { clearInterval(fadeT); song.pause(); }
+    mode = 'box';
+    Music.start();
+    setPlaying(Music.running());
+  }
+  Music.onChange(state => { if (mode === 'box') setPlaying(state === 'running' && Music.running()); });
+
+  function play(fromGesture) {
+    if (fromGesture) activated = true;
+    if (songState !== 'loading' && songState !== 'ok') { startBox(); return; }
+    mode = 'song';
+    if (fromGesture && songState === 'loading') Music.unlock();   // so a late fallback can still be heard
+    if (song.paused) fadeTo(0, 0);
+    let p = null;
+    try { p = song.play(); } catch (e) {}
+    if (!p || !p.then) return;
+    p.then(() => {
+      if (mode !== 'song') return;
+      if (document.hidden) { song.pause(); return; }
+      setPlaying(true);
+      fadeTo(VOL, 2200);
+      Music.sleep();
+    }).catch(err => {
+      const n = err && err.name;
+      if (n === 'NotAllowedError' || n === 'AbortError') return;    // blocked until her first tap
+      fail();
+    });
+  }
+
+  // any tap starts the music if it isn't already playing
+  const onGesture = () => { activated = true; if (!playing && !document.hidden) play(true); };
+  ['pointerup', 'touchend', 'click', 'keydown'].forEach(t => document.addEventListener(t, onGesture, true));
+
+  // pause while she's in another app or tab, carry on by itself when she's back
   document.addEventListener('visibilitychange', () => {
-    if (!ctx || !on) return;
-    if (document.hidden) { clearInterval(timer); timer = 0; ctx.suspend(); }
-    else { ctx.resume().then(() => { idx = 0; loopStart = ctx.currentTime + .15; if (!timer) timer = setInterval(tick, 60); }); }
+    if (document.hidden) {
+      if (!playing) return;
+      hiddenPaused = true;
+      if (mode === 'song') { clearInterval(fadeT); song.pause(); }
+      else if (mode === 'box') Music.stop();
+      setPlaying(false);
+    } else if (hiddenPaused) {
+      hiddenPaused = false;
+      play(false);
+    }
   });
-  return { toggle() { if (on) { stop(); return false; } return start(); } };
+
+  setPlaying(false);
+  if (song) play(false);                 // try right away; most phones wait for the first tap
 })();
 
 /* ---------- screens & navigation ---------- */
@@ -1326,13 +1436,6 @@ const app = $('.app');
 app.addEventListener('scroll', () => { app.scrollTop = 0; app.scrollLeft = 0; });
 addEventListener('scroll', () => { if (scrollY || scrollX) scrollTo(0, 0); });
 $('#backBtn').addEventListener('click', goBack);
-$('#musicBtn').addEventListener('click', () => {
-  const btn = $('#musicBtn');
-  const playing = Music.toggle();
-  btn.classList.toggle('on', !!playing);
-  btn.setAttribute('aria-pressed', playing ? 'true' : 'false');
-  btn.setAttribute('aria-label', playing ? 'Music band karo' : 'Music chalao');
-});
 
 /* ---------- go! ---------- */
 $('#dots').innerHTML = '<i class="dot"></i>'.repeat(DOTS);

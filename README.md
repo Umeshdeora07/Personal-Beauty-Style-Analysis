@@ -106,7 +106,9 @@ const CONFIG = {
   meetTime: "____",   // e.g. "shaam 5 baje" → added to the 14 July line
   outfit:   "____",   // e.g. "blue kurti"  → added to the 14 July line
   loves:    "____",   // e.g. "red roses, momos, pink" → swaps the bouquet / chocolate gifts
-  whatsapp: "____"    // e.g. "91XXXXXXXXXX" → shows a "Reply bhejo 💬" button
+  whatsapp: "____",   // e.g. "91XXXXXXXXXX" → shows a "Reply bhejo 💬" button
+  song: ["music/alfaaz.mp3", ...],   // background song (see Notes)
+  songVolume: 0.8
 };
 ```
 
@@ -121,8 +123,17 @@ chocolate.
 - One file, plain HTML/CSS/JS. Everything is drawn with CSS, SVG and emoji;
   the only network request is Google Fonts (Dancing Script + Poppins), with
   system-font fallbacks if she's offline.
-- The 🎵 button (off by default) plays a soft music-box tune generated with the
-  Web Audio API, so there are no audio files.
+- **Background music plays by itself**, with no play or pause button. Phones don't
+  allow sound before the first touch, so it starts on her first tap (the
+  "Haan, main hi hoon 😌" button on screen 1) and keeps playing. It pauses while
+  she's in another app and carries on when she comes back.
+- **The song:** put the mp3 at `music/alfaaz.mp3`. The card also looks for
+  `music/Alfaaz.mp3`, `alfaaz.mp3` and `Alfaaz.mp3` (set the list in
+  `CONFIG.song`, volume in `CONFIG.songVolume`). The file has to sit next to
+  the page, so it works when the page is opened from this repo or a hosted
+  link, not when only the HTML file is sent on its own.
+- **No song file yet?** It plays the built-in soft music-box tune instead
+  (made with the Web Audio API, no files needed).
 - Tap empty space for a tiny heart. On the last screen there's a hidden heart
   in the bottom-right corner of the letter. 😉
 - Phone back gesture / browser back works screen by screen.
