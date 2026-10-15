@@ -127,19 +127,22 @@ chocolate.
 
 ## Notes
 
-- One file, plain HTML/CSS/JS. Everything is drawn with CSS, SVG and emoji;
-  the only network request is Google Fonts (Dancing Script + Poppins), with
-  system-font fallbacks if she's offline.
+- One file, plain HTML/CSS/JS, song included. Everything is drawn with CSS,
+  SVG and emoji; the only network request is Google Fonts (Dancing Script +
+  Poppins), with system-font fallbacks if she's offline.
 - **Background music plays by itself**, with no play or pause button. Phones don't
   allow sound before the first touch, so it starts on her first tap (the
   "Haan, main hi hoon 😌" button on screen 1) and keeps playing. It pauses while
   she's in another app and carries on when she comes back.
-- **The song:** Barsaat, at `music/barsaat.mp3` (re-encoded to 128 kbps,
-  about 3 MB, so it loads quickly on mobile data). To use a different song,
-  replace that file or change the path in `CONFIG.song`; the volume is
-  `CONFIG.songVolume`. The file has to sit next to the page, so it works when
-  the page is opened from this repo or a hosted link, not when only the HTML
-  file is sent on its own.
+- **The song:** Barsaat, **embedded inside `taniya.html`**, so the letter is
+  one file that plays it anywhere: opened from a zip, sent as a file, or from
+  a link. The page stays usable while the song data finishes loading; a tap
+  made before then starts the song as soon as it's ready. It's re-encoded to
+  128 kbps (about 3 MB, the page is about 4 MB). `music/barsaat.mp3` is kept
+  as the source and as a backup the page falls back to.
+- **Changing the song:** replace `music/barsaat.mp3` and run
+  `python3 tools/embed_song.py` (or `python3 tools/embed_song.py path/to/song.mp3`).
+  Volume is `CONFIG.songVolume`.
 - **No song file yet?** It plays the built-in soft music-box tune instead
   (made with the Web Audio API, no files needed).
 - Tap empty space for a tiny heart. On the last screen there's a hidden heart
