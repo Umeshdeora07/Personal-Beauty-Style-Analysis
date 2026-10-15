@@ -83,3 +83,47 @@ No console errors.
 - The gift box is keyboard-reachable (Tab, then Enter or Space).
 - Responsive from small phones to desktop; fonts and spacing scale fluidly.
 - Sound is off-by-default until she interacts, respecting browser autoplay rules.
+
+---
+
+# 💌 Taniya ji ka letter — `taniya-letter.html`
+
+A separate, single-file digital letter-card (Hinglish), made to be opened on a
+phone. Ten screens, one at a time: a cute "Ruko! ✋" start → a sealed envelope
+with a heart wax seal that opens in 3D → hello → the 14 July calendar →
+six flip-open notes → dil ki baat → three shayari cards → four gift boxes
+(including a Tension Exchange Coupon) → the SORRY surprise with the
+Haan / Nahi game → the closing letter, which folds back into the envelope.
+
+## Fill in your details
+
+Open `taniya-letter.html`, find the `CONFIG` block at the top of the
+`<script>` near the bottom, and replace the `____` values:
+
+```js
+const CONFIG = {
+  myName:   "____",   // your name → signature on the last screen
+  meetTime: "____",   // e.g. "shaam 5 baje" → added to the 14 July line
+  outfit:   "____",   // e.g. "blue kurti"  → added to the 14 July line
+  loves:    "____",   // e.g. "red roses, momos, pink" → swaps the bouquet / chocolate gifts
+  whatsapp: "____"    // e.g. "91XXXXXXXXXX" → shows a "Reply bhejo 💬" button
+};
+```
+
+Anything left as `____` (or empty) is simply left out and the sentence is
+written without it; no blanks or underscores ever appear on the card.
+Colours in `loves` are ignored for the gift swap; a flower (rose, sunflower,
+tulip…) replaces the bouquet and the first non-flower favourite replaces the
+chocolate.
+
+## Notes
+
+- One file, plain HTML/CSS/JS. Everything is drawn with CSS, SVG and emoji;
+  the only network request is Google Fonts (Dancing Script + Poppins), with
+  system-font fallbacks if she's offline.
+- The 🎵 button (off by default) plays a soft music-box tune generated with the
+  Web Audio API, so there are no audio files.
+- Tap empty space for a tiny heart. On the last screen there's a hidden heart
+  in the bottom-right corner of the letter. 😉
+- Phone back gesture / browser back works screen by screen.
+- Respects `prefers-reduced-motion`.
