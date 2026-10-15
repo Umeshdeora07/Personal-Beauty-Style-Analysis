@@ -107,7 +107,7 @@ const CONFIG = {
   outfit:   "____",   // e.g. "blue kurti"  → added to the 14 July line
   loves:    "____",   // e.g. "red roses, momos, pink" → swaps the bouquet / chocolate gifts
   whatsapp: "____",   // e.g. "91XXXXXXXXXX" → shows a "Reply bhejo 💬" button
-  song: ["music/alfaaz.mp3", ...],   // background song (see Notes)
+  song: ["music/barsaat.mp3"],       // background song (see Notes)
   songVolume: 0.8
 };
 ```
@@ -127,11 +127,12 @@ chocolate.
   allow sound before the first touch, so it starts on her first tap (the
   "Haan, main hi hoon 😌" button on screen 1) and keeps playing. It pauses while
   she's in another app and carries on when she comes back.
-- **The song:** put the mp3 at `music/alfaaz.mp3`. The card also looks for
-  `music/Alfaaz.mp3`, `alfaaz.mp3` and `Alfaaz.mp3` (set the list in
-  `CONFIG.song`, volume in `CONFIG.songVolume`). The file has to sit next to
-  the page, so it works when the page is opened from this repo or a hosted
-  link, not when only the HTML file is sent on its own.
+- **The song:** Barsaat, at `music/barsaat.mp3` (re-encoded to 128 kbps,
+  about 3 MB, so it loads quickly on mobile data). To use a different song,
+  replace that file or change the path in `CONFIG.song`; the volume is
+  `CONFIG.songVolume`. The file has to sit next to the page, so it works when
+  the page is opened from this repo or a hosted link, not when only the HTML
+  file is sent on its own.
 - **No song file yet?** It plays the built-in soft music-box tune instead
   (made with the Web Audio API, no files needed).
 - Tap empty space for a tiny heart. On the last screen there's a hidden heart

@@ -7,6 +7,7 @@ Then open index.html and set, near the top of the JS block:
 If you leave music: "" the page generates its own soft romantic
 piano loop in the browser, so there is always background music.
 
-For taniya-letter.html: name the song  alfaaz.mp3  and put it in this
-folder. Nothing else to change; it starts on her first tap. Until the
-file is here, the letter plays its own soft music-box tune instead.
+For taniya-letter.html: the background song is  barsaat.mp3  in this
+folder. To swap it, replace that file (keep the name) or change
+CONFIG.song in the letter. It starts on her first tap. If the file is
+missing, the letter plays its own soft music-box tune instead.
